@@ -415,12 +415,14 @@ app.get('/', (req, res) => {
   res.status(200).json({
     status: 'OK',
     message: 'WebMeter API Server is running',
-    version: '1.0.0',
+    version: '1.0.1',
     endpoints: {
       health: '/api/health',
       auth: '/api/auth',
       users: '/api/users',
-      dashboard: '/api/dashboard'
+      dashboard: '/api/dashboard',
+      'meter-tree': '/api/meter-tree',
+      groups: '/api/groups'
     },
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV || 'development'
