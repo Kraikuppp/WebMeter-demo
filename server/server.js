@@ -283,7 +283,18 @@ app.use(cors({
     // Allow requests with no origin (like mobile apps or curl requests)
     if (!origin) return callback(null, true);
     
+    // Check exact matches first
     if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    
+    // Allow all Vercel preview deployments
+    if (origin && (
+      origin.includes('vercel.app') || 
+      origin.includes('webmeter-demo') ||
+      origin.includes('jakkrits-projects')
+    )) {
+      console.log(`✅ CORS: Allowing Vercel deployment: ${origin}`);
       return callback(null, true);
     }
     
@@ -292,6 +303,7 @@ app.use(cors({
       return callback(null, true);
     }
     
+    console.log(`❌ CORS: Blocked origin: ${origin}`);
     const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
     return callback(new Error(msg), false);
   },
