@@ -403,13 +403,46 @@ app.post('/api/scheduler/stop', (req, res) => {
   }
 });
 
+// Root endpoint
+app.get('/', (req, res) => {
+  res.status(200).json({
+    status: 'OK',
+    message: 'WebMeter API Server is running',
+    version: '1.0.0',
+    endpoints: {
+      health: '/api/health',
+      auth: '/api/auth',
+      users: '/api/users',
+      dashboard: '/api/dashboard'
+    },
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'development'
+  });
+});
+
 // Health check endpoint
 app.get('/api/health', (req, res) => {
   res.status(200).json({
     status: 'OK',
     message: 'WebMeter API Server is running',
     timestamp: new Date().toISOString(),
-    environment: process.env.NODE_ENV || 'development'
+    environment: process.env.NODE_ENV || 'development',
+    database: {
+      host: process.env.DB_HOST ? 'configured' : 'using fallback',
+      ssl: 'enabled'
+    }
+  });
+});
+
+// Debug endpoint for environment variables (remove in production)
+app.get('/api/debug/env', (req, res) => {
+  res.status(200).json({
+    NODE_ENV: process.env.NODE_ENV,
+    DB_HOST: process.env.DB_HOST ? 'configured' : 'not set',
+    DB_USER: process.env.DB_USER ? 'configured' : 'not set',
+    DB_NAME: process.env.DB_NAME ? 'configured' : 'not set',
+    JWT_SECRET: process.env.JWT_SECRET ? 'configured' : 'not set',
+    FRONTEND_URL: process.env.FRONTEND_URL ? 'configured' : 'not set'
   });
 });
 
