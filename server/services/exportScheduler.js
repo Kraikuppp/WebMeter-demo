@@ -8,11 +8,11 @@ const PDFDocument = require('pdfkit');
 
 // Database connections with production-optimized settings
 const parametersPool = new Pool({
-  host: '49.0.87.9',
+  host: 'dpg-d3f1hphr0fns73d4ts0g-a.singapore-postgres.render.com',
   port: 5432,
   database: 'parameters_db',
-  user: 'postgres',
-  password: 'orangepi123',
+  user: 'webmeter_db_user',
+  password: 'daWOGvyNuUBHDDRtwv8sLxisuHrwdnoL',
   
   // Production-optimized settings
   max: process.env.NODE_ENV === 'production' ? 5 : 20,
@@ -33,11 +33,11 @@ const parametersPool = new Pool({
 
 // Main database connection for users (same as manual export)
 const mainDb = new Pool({
-  host: process.env.DB_HOST || '49.0.87.9',
+  host: process.env.DB_HOST || 'dpg-d3f1hphr0fns73d4ts0g-a.singapore-postgres.render.com',
   port: process.env.DB_PORT || 5432,
   database: process.env.DB_NAME || 'webmeter_db',
-  user: process.env.DB_USER || 'webmeter_app',
-  password: process.env.DB_PASSWORD || 'WebMeter2024!',
+  user: process.env.DB_USER || 'webmeter_db_user',
+  password: process.env.DB_PASSWORD || 'daWOGvyNuUBHDDRtwv8sLxisuHrwdnoL',
   
   // Production-optimized settings
   max: process.env.NODE_ENV === 'production' ? 5 : 20,

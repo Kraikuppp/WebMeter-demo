@@ -447,7 +447,18 @@ app.listen(PORT, '0.0.0.0', () => {
   
   // Test database connection before starting scheduler
   const { healthCheck } = require('./config/database');
-  healthCheck().then(isHealthy => {
+  
+  // Add timeout to health check
+  const healthCheckWithTimeout = () => {
+    return Promise.race([
+      healthCheck(),
+      new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Health check timeout')), 5000)
+      )
+    ]);
+  };
+  
+  healthCheckWithTimeout().then(isHealthy => {
     if (isHealthy) {
       // Start export scheduler only if database is healthy
       try {
@@ -461,6 +472,7 @@ app.listen(PORT, '0.0.0.0', () => {
     }
   }).catch(error => {
     console.error('❌ Database health check failed:', error.message);
+    console.log('📝 Server will continue running without database-dependent features');
   });
 });
 

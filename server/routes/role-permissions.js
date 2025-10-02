@@ -4,10 +4,10 @@ const { Pool } = require('pg');
 
 // Database connection
 const pool = new Pool({
-  user: process.env.DB_USER || 'postgres',
-  host: process.env.DB_HOST || 'localhost',
+  user: process.env.DB_USER || 'webmeter_db_user',
+  host: process.env.DB_HOST || 'dpg-d3f1hphr0fns73d4ts0g-a.singapore-postgres.render.com',
   database: process.env.DB_NAME || 'webmeter_db',
-  password: process.env.DB_PASSWORD || 'password',
+  password: process.env.DB_PASSWORD || 'daWOGvyNuUBHDDRtwv8sLxisuHrwdnoL',
   port: process.env.DB_PORT || 5432,
 });
 

@@ -4,11 +4,11 @@ const router = express.Router();
 
 // สร้าง connection pool สำหรับ parameters_db
 const parametersPool = new Pool({
-  host: '49.0.87.9',
+  host: 'dpg-d3f1hphr0fns73d4ts0g-a.singapore-postgres.render.com',
   port: 5432,
   database: 'parameters_db',
-  user: 'postgres',
-  password: 'orangepi123',
+  user: 'webmeter_db_user',
+  password: 'daWOGvyNuUBHDDRtwv8sLxisuHrwdnoL',
   max: 20,
   idleTimeoutMillis: 30000,
   connectionTimeoutMillis: 2000,

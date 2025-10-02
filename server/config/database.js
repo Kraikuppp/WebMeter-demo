@@ -11,11 +11,11 @@ console.log('DB_PASSWORD:', process.env.DB_PASSWORD ? '***' : 'undefined');
 
 // สร้าง connection pool สำหรับ PostgreSQL
 const pool = new Pool({
-  host: process.env.DB_HOST || '49.0.87.9',
+  host: process.env.DB_HOST || 'dpg-d3f1hphr0fns73d4ts0g-a.singapore-postgres.render.com',
   port: process.env.DB_PORT || 5432,
   database: process.env.DB_NAME || 'webmeter_db',
-  user: process.env.DB_USER || 'webmeter_app',
-  password: process.env.DB_PASSWORD || 'WebMeter2024!',
+  user: process.env.DB_USER || 'webmeter_db_user',
+  password: process.env.DB_PASSWORD || 'daWOGvyNuUBHDDRtwv8sLxisuHrwdnoL',
   
   // Production-optimized connection settings
   max: process.env.NODE_ENV === 'production' ? 10 : 20, // ลดจำนวน connection ใน production
