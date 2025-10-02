@@ -4,14 +4,14 @@ const router = express.Router();
 
 // สร้าง connection pool สำหรับ parameters_db
 const parametersPool = new Pool({
-  host: 'dpg-d3f1hphr0fns73d4ts0g-a.singapore-postgres.render.com',
-  port: 5432,
-  database: 'parameters_db',
-  user: 'webmeter_db_user',
-  password: 'daWOGvyNuUBHDDRtwv8sLxisuHrwdnoL',
+  host: process.env.DB_HOST || 'dpg-d3f1hphr0fns73d4ts0g-a.singapore-postgres.render.com',
+  port: process.env.DB_PORT || 5432,
+  database: process.env.DB_NAME || 'webmeter_db',
+  user: process.env.DB_USER || 'webmeter_db_user',
+  password: process.env.DB_PASSWORD || 'daWOGvyNuUBHDDRtwv8sLxisuHrwdnoL',
   max: 20,
   idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 2000,
+  connectionTimeoutMillis: 10000,
   // SSL configuration for Render PostgreSQL
   ssl: {
     rejectUnauthorized: false,
