@@ -294,6 +294,34 @@ NODE_ENV=production
 REACT_APP_API_URL=https://webmeter-backend-demo.onrender.com
 ```
 
+### 🗄️ **Database Setup Requirements:**
+
+**คุณใช้ 2 databases:**
+1. **webmeter_db** - Users, authentication, roles
+2. **parameters_db** - Meter data, parameters, readings
+
+**ใน Render PostgreSQL ต้องสร้าง 2 databases:**
+
+#### **Option A: สร้าง 2 Render PostgreSQL instances:**
+```bash
+# Database 1: Main Database
+Name: webmeter-main-db
+Database: webmeter_db
+Tables: users, roles, events, etc.
+
+# Database 2: Parameters Database  
+Name: webmeter-parameters-db
+Database: parameters_db
+Tables: parameters_value, meter_info, etc.
+```
+
+#### **Option B: ใช้ 1 PostgreSQL instance แต่สร้าง 2 databases:**
+```sql
+-- ใน Render PostgreSQL console
+CREATE DATABASE parameters_db;
+GRANT ALL PRIVILEGES ON DATABASE parameters_db TO webmeter_db_user;
+```
+
 ### 🛠️ **Option 2: แก้ไข Database Server (49.0.87.9):**
 
 หากต้องการใช้ database server เดิม ต้องแก้ไข:

@@ -32,8 +32,11 @@ parametersPool.on('error', (err) => {
 // ===== LOCATIONS =====
 
 // Get all locations with hierarchical structure
-router.get('/locations', async (req, res) => {
+router.get('/locations', authenticateToken, async (req, res) => {
   try {
+    console.log('🔍 === LOCATIONS API CALLED ===');
+    console.log('📝 Query params:', req.query);
+    
     const { tree_type } = req.query;
     let query = `
       SELECT 
@@ -56,7 +59,19 @@ router.get('/locations', async (req, res) => {
     }
     
     query += ' ORDER BY l1.parent_id NULLS FIRST, l1.name';
+    
+    console.log('📊 Executing query:', query);
+    console.log('📋 Query params:', params);
+    
     const result = await parametersPool.query(query, params);
+    
+    console.log('✅ Query result count:', result.rows.length);
+    if (result.rows.length > 0) {
+      console.log('📍 Sample locations:', result.rows.slice(0, 3).map(r => ({ id: r.id, name: r.name, tree_type: r.tree_type })));
+    } else {
+      console.log('❌ No locations found in database');
+    }
+    
     res.json(result.rows);
   } catch (error) {
     console.error('Error fetching locations:', error);
@@ -446,6 +461,9 @@ router.delete('/floors/:id', async (req, res) => {
 // Get all meters
 router.get('/meters', async (req, res) => {
   try {
+    console.log('🔍 === METERS API CALLED ===');
+    console.log('📝 Query params:', req.query);
+    
     const { lognet_id, floor_id } = req.query;
     let query = 'SELECT * FROM meters';
     let params = [];
@@ -460,7 +478,19 @@ router.get('/meters', async (req, res) => {
     }
     
     query += ' ORDER BY id';
+    
+    console.log('📊 Executing query:', query);
+    console.log('📋 Query params:', params);
+    
     const result = await parametersPool.query(query, params);
+    
+    console.log('✅ Query result count:', result.rows.length);
+    if (result.rows.length > 0) {
+      console.log('🔌 Sample meters:', result.rows.slice(0, 3).map(r => ({ id: r.id, name: r.name, brand: r.brand, slave_id: r.slave_id })));
+    } else {
+      console.log('❌ No meters found in database');
+    }
+    
     res.json(result.rows);
   } catch (error) {
     console.error('Error fetching meters:', error);
