@@ -4,10 +4,12 @@ require('dotenv').config({ path: path.join(__dirname, '../.env') });
 
 // Debug: ตรวจสอบ environment variables
 console.log('🔍 Database Configuration:');
+console.log('NODE_ENV:', process.env.NODE_ENV);
 console.log('DB_HOST:', process.env.DB_HOST);
 console.log('DB_USER:', process.env.DB_USER);
 console.log('DB_NAME:', process.env.DB_NAME);
 console.log('DB_PASSWORD:', process.env.DB_PASSWORD ? '***' : 'undefined');
+console.log('🔍 Fallback values will be used if env vars are missing');
 
 // สร้าง connection pool สำหรับ PostgreSQL
 const pool = new Pool({
@@ -24,11 +26,11 @@ const pool = new Pool({
   connectionTimeoutMillis: 10000, // เพิ่มเวลา connection timeout เป็น 10 วินาที
   acquireTimeoutMillis: 30000, // เพิ่มเวลารอ connection จาก pool
   
-  // SSL configuration for production (required for Render PostgreSQL)
-  ssl: process.env.NODE_ENV === 'production' || process.env.DB_HOST?.includes('render.com') ? {
+  // SSL configuration - always use SSL for Render PostgreSQL
+  ssl: {
     rejectUnauthorized: false, // อนุญาตให้ใช้ self-signed certificates
     require: true // บังคับใช้ SSL สำหรับ Render PostgreSQL
-  } : false,
+  },
   
   // Keep alive settings
   keepAlive: true,
