@@ -1,6 +1,7 @@
 const express = require('express');
-const { Pool } = require('pg');
 const router = express.Router();
+const { Pool } = require('pg');
+const { authenticateToken } = require('../middleware/auth');
 
 // สร้าง connection pool สำหรับ parameters_db
 const parametersPool = new Pool({
@@ -76,7 +77,7 @@ const columnMapping = {
 };
 
 // GET /api/table-data - ดึงข้อมูลตามช่วงวันเวลาและคอลัมน์ที่เลือก
-router.get('/', async (req, res) => {
+router.get('/', authenticateToken, async (req, res) => {
   try {
     const {
       dateFrom,
