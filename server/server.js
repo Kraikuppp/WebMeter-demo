@@ -12,6 +12,13 @@ const dotenv = require('dotenv');
 // Load environment variables robustly from root .env and server/.env (server/.env overrides)
 dotenv.config({ path: path.resolve(process.cwd(), '.env') });
 dotenv.config({ path: path.resolve(__dirname, '.env'), override: true });
+dotenv.config({ path: path.resolve(__dirname, '.env.production'), override: true });
+
+// Force production environment if on Render
+if (process.env.RENDER) {
+  process.env.NODE_ENV = 'production';
+  console.log('🚀 Detected Render environment, forcing NODE_ENV=production');
+}
 
 // Import routes
 const authRoutes = require('./routes/auth');

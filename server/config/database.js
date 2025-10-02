@@ -1,6 +1,14 @@
 const { Pool } = require('pg');
 const path = require('path');
+
+// Load environment variables from multiple sources
 require('dotenv').config({ path: path.join(__dirname, '../.env') });
+require('dotenv').config({ path: path.join(__dirname, '../.env.production') });
+
+// Force production environment if on Render
+if (process.env.RENDER) {
+  process.env.NODE_ENV = 'production';
+}
 
 // Debug: ตรวจสอบ environment variables
 console.log('🔍 Database Configuration:');
