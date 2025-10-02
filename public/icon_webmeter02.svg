@@ -1,0 +1,82 @@
+<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Advanced gradient for main meter -->
+    <linearGradient id="meterGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0a1628;stop-opacity:1" />
+      <stop offset="30%" style="stop-color:#1a2b4a;stop-opacity:1" />
+      <stop offset="70%" style="stop-color:#2d4a6d;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0a1628;stop-opacity:1" />
+    </linearGradient>
+    
+    <!-- Holographic display gradient -->
+    <linearGradient id="displayGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#000511;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#001122;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#000511;stop-opacity:1" />
+    </linearGradient>
+    
+    <!-- Neon energy gradient -->
+    <linearGradient id="energyGlow" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#00ffff;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#0080ff;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0040ff;stop-opacity:1" />
+    </linearGradient>
+    
+    <!-- Advanced glow effect -->
+    <filter id="neonGlow">
+      <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
+      <feMerge> 
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    
+    <!-- Outer glow -->
+    <filter id="outerGlow">
+      <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+      <feMerge> 
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    
+    <!-- Inner shadow -->
+    <filter id="innerShadow">
+      <feOffset dx="2" dy="2"/>
+      <feGaussianBlur stdDeviation="2" result="offset-blur"/>
+      <feFlood flood-color="#000000" flood-opacity="0.3"/>
+      <feComposite in2="offset-blur" operator="in"/>
+      <feMerge> 
+        <feMergeNode/>
+        <feMergeNode in="SourceGraphic"/> 
+      </feMerge>
+    </filter>
+  </defs>
+  
+  <!-- Main meter housing with metallic finish -->
+  <rect x="55" y="65" width="90" height="70" rx="12" ry="12" fill="url(#meterGradient)" filter="url(#innerShadow)"/>
+  <rect x="57" y="67" width="86" height="66" rx="10" ry="10" fill="none" stroke="#4a6b8a" stroke-width="1" opacity="0.5"/>
+  
+  <!-- Holographic display screen -->
+  <rect x="65" y="75" width="70" height="45" rx="6" ry="6" fill="url(#displayGradient)" stroke="#00d4ff" stroke-width="2" filter="url(#outerGlow)"/>
+  <rect x="67" y="77" width="66" height="41" rx="4" ry="4" fill="none" stroke="#0088cc" stroke-width="1" opacity="0.3"/>
+  
+  <!-- Advanced digital display with data visualization -->
+  <rect x="72" y="82" width="35" height="4" rx="2" fill="#00ff88" opacity="1" filter="url(#neonGlow)">
+    <animate attributeName="width" values="35;45;35" dur="3s" repeatCount="indefinite"/>
+  </rect>
+  <rect x="72" y="89" width="45" height="4" rx="2" fill="#00ccff" opacity="0.8" filter="url(#neonGlow)">
+    <animate attributeName="width" values="45;55;45" dur="2.5s" repeatCount="indefinite"/>
+  </rect>
+  <rect x="72" y="96" width="25" height="4" rx="2" fill="#00ff88" opacity="0.6" filter="url(#neonGlow)">
+    <animate attributeName="width" values="25;40;25" dur="4s" repeatCount="indefinite"/>
+  </rect>
+  <rect x="72" y="103" width="40" height="4" rx="2" fill="#00aaff" opacity="0.9" filter="url(#neonGlow)">
+    <animate attributeName="width" values="40;50;40" dur="3.5s" repeatCount="indefinite"/>
+  </rect>
+  
+  <!-- Futuristic lightning bolt -->
+  <path d="M115 85 L125 95 L120 95 L125 105 L115 95 L120 95 Z" fill="url(#energyGlow)" filter="url(#neonGlow)" opacity="0.9">
+    <animate attributeName="opacity" values="0.6;1;0.6" dur="1.5s" repeatCount="indefinite"/>
+  </path>
+</svg>
