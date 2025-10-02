@@ -1,6 +1,33 @@
 const express = require('express');
 const router = express.Router();
-const db = require('../config/database');
+const { Pool } = require('pg');
+const { authenticateToken } = require('../middleware/auth');
+
+// สร้าง connection pool สำหรับ parameters_db (meter tree data)
+const parametersPool = new Pool({
+  host: process.env.PARAMETER_DB_HOST || 'dpg-d3f1hphr0fns73d4ts0g-a.singapore-postgres.render.com',
+  port: process.env.PARAMETER_DB_PORT || 5432,
+  database: process.env.PARAMETER_DB_NAME || 'parameters_db',
+  user: process.env.PARAMETER_DB_USER || 'webmeter_db_user',
+  password: process.env.PARAMETER_DB_PASSWORD || 'daWOGvyNuUBHDDRtwv8sLxisuHrwdnoL',
+  max: 20,
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 10000,
+  // SSL configuration for Render PostgreSQL
+  ssl: {
+    rejectUnauthorized: false,
+    require: true
+  }
+});
+
+// Test connection
+parametersPool.on('connect', () => {
+  console.log('✅ Connected to parameters_db database for meter-tree API');
+});
+
+parametersPool.on('error', (err) => {
+  console.error('❌ Unexpected error on parameters_db client', err);
+});
 
 // ===== LOCATIONS =====
 
@@ -29,7 +56,7 @@ router.get('/locations', async (req, res) => {
     }
     
     query += ' ORDER BY l1.parent_id NULLS FIRST, l1.name';
-    const result = await db.query(query, params);
+    const result = await parametersPool.query(query, params);
     res.json(result.rows);
   } catch (error) {
     console.error('Error fetching locations:', error);
@@ -49,7 +76,7 @@ router.post('/locations', async (req, res) => {
       location_floor_id
     });
     
-    const result = await db.query(
+    const result = await parametersPool.query(
       'INSERT INTO locations (name, description, parent_id, tree_type, location_floor_id) VALUES ($1, $2, $3, $4, $5) RETURNING *',
       [name, description, parent_id || null, tree_type, location_floor_id]
     );
@@ -67,7 +94,7 @@ router.put('/locations/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const { name, description, location_floor_id } = req.body;
-    const result = await db.query(
+    const result = await parametersPool.query(
       'UPDATE locations SET name = $1, description = $2, location_floor_id = $3 WHERE id = $4 RETURNING *',
       [name, description, location_floor_id, id]
     );
@@ -99,7 +126,7 @@ router.delete('/locations/:id', async (req, res) => {
     
     query += ' RETURNING *';
     
-    const result = await db.query(query, params);
+    const result = await parametersPool.query(query, params);
     
     if (result.rows.length === 0) {
       console.log('❌ Backend: Location not found for deletion or tree_type mismatch');
@@ -147,7 +174,7 @@ router.get('/lognets', async (req, res) => {
     }
     
     query += ' ORDER BY l.name';
-    const result = await db.query(query, params);
+    const result = await parametersPool.query(query, params);
     res.json(result.rows);
   } catch (error) {
     console.error('Error fetching lognets:', error);
@@ -180,7 +207,7 @@ router.post('/lognets', async (req, res) => {
     const cleanDns = dns === '' ? null : dns;
     const cleanIsActive = is_active !== undefined ? is_active : true;
     
-    const result = await db.query(
+    const result = await parametersPool.query(
       `INSERT INTO lognets (
         location_id, sublocation_id, name, model, brand, serial_number, 
         firmware_version, ip_address, subnet_mask, gateway, dns, is_active
@@ -220,7 +247,7 @@ router.put('/lognets/:id', async (req, res) => {
     const cleanGateway = gateway === '' ? null : gateway;
     const cleanDns = dns === '' ? null : dns;
     
-    const result = await db.query(
+    const result = await parametersPool.query(
       `UPDATE lognets SET 
         location_id = $1, sublocation_id = $2, name = $3, model = $4, 
         brand = $5, serial_number = $6, firmware_version = $7, ip_address = $8,
@@ -246,7 +273,7 @@ router.delete('/lognets/:id', async (req, res) => {
     const { id } = req.params;
     console.log('🗑️ Backend: Deleting lognet with ID:', id);
     
-    const result = await db.query(
+    const result = await parametersPool.query(
       'DELETE FROM lognets WHERE id = $1 RETURNING *',
       [id]
     );
@@ -279,7 +306,7 @@ router.get('/buildings', async (req, res) => {
     }
     
     query += ' ORDER BY name';
-    const result = await db.query(query, params);
+    const result = await parametersPool.query(query, params);
     res.json(result.rows);
   } catch (error) {
     console.error('Error fetching buildings:', error);
@@ -291,7 +318,7 @@ router.get('/buildings', async (req, res) => {
 router.post('/buildings', async (req, res) => {
   try {
     const { location_id, name, description, is_active } = req.body;
-    const result = await db.query(
+    const result = await parametersPool.query(
       'INSERT INTO buildings (location_id, name, description, is_active) VALUES ($1, $2, $3, $4) RETURNING *',
       [location_id, name, description, is_active ?? true]
     );
@@ -307,7 +334,7 @@ router.put('/buildings/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const { location_id, name, description, is_active } = req.body;
-    const result = await db.query(
+    const result = await parametersPool.query(
       'UPDATE buildings SET location_id = $1, name = $2, description = $3, is_active = $4 WHERE id = $5 RETURNING *',
       [location_id, name, description, is_active, id]
     );
@@ -325,7 +352,7 @@ router.put('/buildings/:id', async (req, res) => {
 router.delete('/buildings/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const result = await db.query(
+    const result = await parametersPool.query(
       'DELETE FROM buildings WHERE id = $1 RETURNING *',
       [id]
     );
@@ -354,7 +381,7 @@ router.get('/floors', async (req, res) => {
     }
     
     query += ' ORDER BY floor_number, name';
-    const result = await db.query(query, params);
+    const result = await parametersPool.query(query, params);
     res.json(result.rows);
   } catch (error) {
     console.error('Error fetching floors:', error);
@@ -366,7 +393,7 @@ router.get('/floors', async (req, res) => {
 router.post('/floors', async (req, res) => {
   try {
     const { building_id, name, floor_number, description, is_active, floor_location_id } = req.body;
-    const result = await db.query(
+    const result = await parametersPool.query(
       'INSERT INTO floors (building_id, name, floor_number, description, is_active, floor_location_id) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
       [building_id, name, floor_number, description, is_active ?? true, floor_location_id]
     );
@@ -382,7 +409,7 @@ router.put('/floors/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const { building_id, name, floor_number, description, is_active, floor_location_id } = req.body;
-    const result = await db.query(
+    const result = await parametersPool.query(
       'UPDATE floors SET building_id = $1, name = $2, floor_number = $3, description = $4, is_active = $5, floor_location_id = $6 WHERE id = $7 RETURNING *',
       [building_id, name, floor_number, description, is_active, floor_location_id, id]
     );
@@ -400,7 +427,7 @@ router.put('/floors/:id', async (req, res) => {
 router.delete('/floors/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const result = await db.query(
+    const result = await parametersPool.query(
       'DELETE FROM floors WHERE id = $1 RETURNING *',
       [id]
     );
@@ -433,7 +460,7 @@ router.get('/meters', async (req, res) => {
     }
     
     query += ' ORDER BY id';
-    const result = await db.query(query, params);
+    const result = await parametersPool.query(query, params);
     res.json(result.rows);
   } catch (error) {
     console.error('Error fetching meters:', error);
@@ -481,7 +508,7 @@ router.post('/meters', async (req, res) => {
     console.log('  - port:', port, '→', cleanPort);
     console.log('  - slave_id:', slave_id, '→', cleanSlaveId);
     
-    const result = await db.query(
+    const result = await parametersPool.query(
       `INSERT INTO meters (
         name, brand, model, meter_sn, protocol, ip_address, slave_id, port, budrate,
         ct_primary, pt_primary, ct_secondary, pt_secondary, is_active,
@@ -601,7 +628,7 @@ router.put('/meters/:id', async (req, res) => {
     console.log('🔧 Update meter query:', query);
     console.log('📋 Update meter values:', values);
     
-    const result = await db.query(query, values);
+    const result = await parametersPool.query(query, values);
     
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Meter not found' });
@@ -617,7 +644,7 @@ router.put('/meters/:id', async (req, res) => {
 router.delete('/meters/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const result = await db.query(
+    const result = await parametersPool.query(
       'DELETE FROM meters WHERE id = $1 RETURNING *',
       [id]
     );
@@ -835,7 +862,7 @@ router.get('/favorites', async (req, res) => {
     
     query += ' ORDER BY fm.created_at DESC';
     
-    const result = await db.query(query, params);
+    const result = await parametersPool.query(query, params);
     res.json(result.rows);
   } catch (error) {
     console.error('Error fetching favorite meters:', error);
@@ -849,13 +876,13 @@ router.post('/favorites', async (req, res) => {
     const { user_id = 1, meter_id, tree_type } = req.body; // Default to user_id = 1 for now
     
     // Check if meter exists
-    const meterCheck = await db.query('SELECT id, name FROM meters WHERE id = $1', [meter_id]);
+    const meterCheck = await parametersPool.query('SELECT id, name FROM meters WHERE id = $1', [meter_id]);
     if (meterCheck.rows.length === 0) {
       return res.status(404).json({ error: 'Meter not found' });
     }
     
     // Check if already in favorites
-    const existingCheck = await db.query(
+    const existingCheck = await parametersPool.query(
       'SELECT id FROM user_favorite_meters WHERE user_id = $1 AND meter_id = $2 AND tree_type = $3',
       [user_id, meter_id, tree_type]
     );
@@ -865,7 +892,7 @@ router.post('/favorites', async (req, res) => {
     }
     
     // Add to favorites
-    const result = await db.query(
+    const result = await parametersPool.query(
       'INSERT INTO user_favorite_meters (user_id, meter_id, tree_type) VALUES ($1, $2, $3) RETURNING *',
       [user_id, meter_id, tree_type]
     );
@@ -884,7 +911,7 @@ router.delete('/favorites/:meter_id', async (req, res) => {
     const { meter_id } = req.params;
     const { user_id = 1, tree_type } = req.query; // Default to user_id = 1 for now
     
-    const result = await db.query(
+    const result = await parametersPool.query(
       'DELETE FROM user_favorite_meters WHERE user_id = $1 AND meter_id = $2 AND tree_type = $3 RETURNING *',
       [user_id, meter_id, tree_type]
     );
@@ -907,20 +934,20 @@ router.post('/favorites/toggle', async (req, res) => {
     const { user_id = 1, meter_id, tree_type } = req.body; // Default to user_id = 1 for now
     
     // Check if meter exists
-    const meterCheck = await db.query('SELECT id, name FROM meters WHERE id = $1', [meter_id]);
+    const meterCheck = await parametersPool.query('SELECT id, name FROM meters WHERE id = $1', [meter_id]);
     if (meterCheck.rows.length === 0) {
       return res.status(404).json({ error: 'Meter not found' });
     }
     
     // Check if already in favorites
-    const existingCheck = await db.query(
+    const existingCheck = await parametersPool.query(
       'SELECT id FROM user_favorite_meters WHERE user_id = $1 AND meter_id = $2 AND tree_type = $3',
       [user_id, meter_id, tree_type]
     );
     
     if (existingCheck.rows.length > 0) {
       // Remove from favorites
-      await db.query(
+      await parametersPool.query(
         'DELETE FROM user_favorite_meters WHERE user_id = $1 AND meter_id = $2 AND tree_type = $3',
         [user_id, meter_id, tree_type]
       );
@@ -933,7 +960,7 @@ router.post('/favorites/toggle', async (req, res) => {
       });
     } else {
       // Add to favorites
-      const result = await db.query(
+      const result = await parametersPool.query(
         'INSERT INTO user_favorite_meters (user_id, meter_id, tree_type) VALUES ($1, $2, $3) RETURNING *',
         [user_id, meter_id, tree_type]
       );
@@ -986,7 +1013,7 @@ router.get('/available-meters', async (req, res) => {
       ORDER BY m.id
     `;
     
-    const result = await db.query(query);
+    const result = await parametersPool.query(query);
     
     // Format data for export scheduler
     const meters = result.rows.map(row => ({
