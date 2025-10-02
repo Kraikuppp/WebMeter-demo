@@ -44,6 +44,12 @@ const exportScheduler = require('./services/exportScheduler');
 // Initialize Express app
 const app = express();
 
+// Trust proxy for production deployment (Render, Vercel, etc.)
+if (process.env.NODE_ENV === 'production') {
+  app.set('trust proxy', 1); // Trust first proxy
+  console.log('🔒 Trust proxy enabled for production');
+}
+
 // CORS configuration - moved after app initialization
 const CLIENT_URL = process.env.CLIENT_URL || '*';
 
@@ -248,27 +254,65 @@ app.post('/api/send-line-message', async (req, res) => {
 // Security middleware
 app.use(helmet());
 
-// CORS configuration
+// CORS configuration with production URLs
+const allowedOrigins = [
+  // Development URLs
+  'http://localhost:8080',
+  'http://localhost:8081', 
+  'http://localhost:8082',
+  'http://127.0.0.1:8080',
+  'http://127.0.0.1:8081',
+  'http://127.0.0.1:8082',
+  // Production URLs
+  'https://web-meter-demo.vercel.app',
+  'https://webmeter-frontend-demo.onrender.com',
+  // Add your actual production URLs here
+  process.env.FRONTEND_URL,
+  process.env.CLIENT_URL
+].filter(Boolean); // Remove undefined values
+
 app.use(cors({
-  origin: [
-    'http://localhost:8080',
-    'http://localhost:8081',
-    'http://localhost:8082',
-    'http://127.0.0.1:8080',
-    'http://127.0.0.1:8081',
-    'http://127.0.0.1:8082'
-  ],
+  origin: (origin, callback) => {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    
+    // In development, allow all origins
+    if (process.env.NODE_ENV !== 'production') {
+      return callback(null, true);
+    }
+    
+    const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
+    return callback(new Error(msg), false);
+  },
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  optionsSuccessStatus: 200 // Some legacy browsers choke on 204
 }));
 
-// Rate limiting
+// Rate limiting with production-safe configuration
 const limiter = rateLimit({
   windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000, // 15 minutes
   max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS) || 100, // limit each IP
   message: {
     error: 'Too many requests from this IP, please try again later.'
+  },
+  // Production-safe configuration
+  standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+  legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+  // Skip rate limiting in development if needed
+  skip: (req) => {
+    // Skip rate limiting for health checks
+    return req.url === '/api/health';
+  },
+  // Custom key generator that handles proxy headers safely
+  keyGenerator: (req) => {
+    // Use X-Forwarded-For if trust proxy is enabled, otherwise use req.ip
+    return req.ip || req.connection.remoteAddress || 'unknown';
   }
 });
 app.use('/api/', limiter);
@@ -395,31 +439,71 @@ app.use('*', (req, res) => {
 });
 
 // Start server
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 WebMeter API Server running on port ${PORT}`);
   console.log(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
   console.log(`🔗 Health check: http://localhost:${PORT}/api/health`);
+  console.log(`🌍 CORS allowed origins:`, allowedOrigins);
   
-  // Start export scheduler
-  try {
-    exportScheduler.start();
-    console.log('📅 Export Scheduler started automatically');
-  } catch (error) {
-    console.error('❌ Failed to start Export Scheduler:', error);
-  }
+  // Test database connection before starting scheduler
+  const { healthCheck } = require('./config/database');
+  healthCheck().then(isHealthy => {
+    if (isHealthy) {
+      // Start export scheduler only if database is healthy
+      try {
+        exportScheduler.start();
+        console.log('📅 Export Scheduler started automatically');
+      } catch (error) {
+        console.error('❌ Failed to start Export Scheduler:', error.message);
+      }
+    } else {
+      console.warn('⚠️ Database unhealthy - Export Scheduler not started');
+    }
+  }).catch(error => {
+    console.error('❌ Database health check failed:', error.message);
+  });
 });
 
 // Graceful shutdown
-process.on('SIGINT', () => {
-  console.log('\n🛑 Shutting down server...');
+const gracefulShutdown = async (signal) => {
+  console.log(`\n🛑 Received ${signal}. Shutting down server gracefully...`);
   
   // Stop export scheduler
   try {
     exportScheduler.stop();
     console.log('📅 Export Scheduler stopped');
   } catch (error) {
-    console.error('❌ Error stopping Export Scheduler:', error);
+    console.error('❌ Error stopping Export Scheduler:', error.message);
   }
   
+  // Close database connections
+  try {
+    const { gracefulShutdown: dbShutdown } = require('./config/database');
+    await dbShutdown();
+  } catch (error) {
+    console.error('❌ Error closing database connections:', error.message);
+  }
+  
+  console.log('✅ Server shutdown complete');
   process.exit(0);
+};
+
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+
+// Handle uncaught exceptions
+process.on('uncaughtException', (error) => {
+  console.error('❌ Uncaught Exception:', error.message);
+  if (process.env.NODE_ENV !== 'production') {
+    console.error(error.stack);
+  }
+  gracefulShutdown('uncaughtException');
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('❌ Unhandled Rejection at:', promise, 'reason:', reason);
+  if (process.env.NODE_ENV !== 'production') {
+    console.error(reason);
+  }
+  gracefulShutdown('unhandledRejection');
 });

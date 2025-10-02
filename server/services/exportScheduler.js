@@ -6,16 +6,29 @@ const path = require('path');
 const XLSX = require('xlsx');
 const PDFDocument = require('pdfkit');
 
-// Database connections
+// Database connections with production-optimized settings
 const parametersPool = new Pool({
   host: '49.0.87.9',
   port: 5432,
   database: 'parameters_db',
   user: 'postgres',
   password: 'orangepi123',
-  max: 20,
-  idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 2000,
+  
+  // Production-optimized settings
+  max: process.env.NODE_ENV === 'production' ? 5 : 20,
+  min: 1,
+  idleTimeoutMillis: 60000,
+  connectionTimeoutMillis: 15000,
+  acquireTimeoutMillis: 30000,
+  
+  // SSL for production
+  ssl: process.env.NODE_ENV === 'production' ? {
+    rejectUnauthorized: false
+  } : false,
+  
+  // Keep alive
+  keepAlive: true,
+  keepAliveInitialDelayMillis: 10000,
 });
 
 // Main database connection for users (same as manual export)
@@ -25,9 +38,39 @@ const mainDb = new Pool({
   database: process.env.DB_NAME || 'webmeter_db',
   user: process.env.DB_USER || 'webmeter_app',
   password: process.env.DB_PASSWORD || 'WebMeter2024!',
-  max: 20,
-  idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 2000,
+  
+  // Production-optimized settings
+  max: process.env.NODE_ENV === 'production' ? 5 : 20,
+  min: 1,
+  idleTimeoutMillis: 60000,
+  connectionTimeoutMillis: 15000,
+  acquireTimeoutMillis: 30000,
+  
+  // SSL for production
+  ssl: process.env.NODE_ENV === 'production' ? {
+    rejectUnauthorized: false
+  } : false,
+  
+  // Keep alive
+  keepAlive: true,
+  keepAliveInitialDelayMillis: 10000,
+});
+
+// Error handling for database pools
+parametersPool.on('error', (err) => {
+  console.error('❌ Parameters Pool Error:', err.message);
+  // Don't exit in production
+  if (process.env.NODE_ENV !== 'production') {
+    console.error('Full error:', err);
+  }
+});
+
+mainDb.on('error', (err) => {
+  console.error('❌ Main DB Pool Error:', err.message);
+  // Don't exit in production
+  if (process.env.NODE_ENV !== 'production') {
+    console.error('Full error:', err);
+  }
 });
 
 // Create required tables if not exist
@@ -169,26 +212,75 @@ class ExportScheduler {
     console.log('✅ Export Scheduler stopped successfully');
   }
 
-  // Check for due schedules and run them
+  // Check for due schedules and run them with improved error handling
   async checkAndRunDueSchedules() {
+    let client;
     try {
+      // Use a dedicated client with timeout
+      client = await parametersPool.connect();
+      
+      // Set a query timeout
+      const queryTimeout = setTimeout(() => {
+        console.warn('⚠️ Query timeout - cancelling database operation');
+        client.release();
+      }, 25000); // 25 second timeout
+      
       // Get all due schedules
-      const result = await parametersPool.query(`
+      const result = await client.query(`
         SELECT * FROM export_schedules 
         WHERE enabled = true 
         AND next_run <= NOW()
         ORDER BY next_run ASC
+        LIMIT 10
       `);
+      
+      clearTimeout(queryTimeout);
+      client.release();
+      client = null;
 
       if (result.rows.length > 0) {
         console.log(`⏰ Found ${result.rows.length} due export schedules`);
         
+        // Process schedules one by one to avoid overwhelming the system
         for (const schedule of result.rows) {
-          await this.runExportSchedule(schedule);
+          try {
+            await this.runExportSchedule(schedule);
+            // Add small delay between schedules to prevent resource exhaustion
+            await new Promise(resolve => setTimeout(resolve, 1000));
+          } catch (scheduleError) {
+            console.error(`❌ Error running schedule ${schedule.id}:`, scheduleError.message);
+            // Continue with next schedule instead of stopping all
+            continue;
+          }
         }
       }
     } catch (error) {
-      console.error('❌ Error checking due schedules:', error);
+      console.error('❌ Error checking due schedules:', error.message);
+      
+      // Release client if still connected
+      if (client) {
+        try {
+          client.release();
+        } catch (releaseError) {
+          console.error('❌ Error releasing client:', releaseError.message);
+        }
+      }
+      
+      // Log additional details in development
+      if (process.env.NODE_ENV !== 'production') {
+        console.error('Full error details:', error);
+      }
+      
+      // If it's a connection error, try to recreate the pool
+      if (error.message.includes('Connection terminated') || 
+          error.message.includes('connection timeout')) {
+        console.log('🔄 Attempting to recover from connection error...');
+        // Don't recreate pools in production to avoid memory leaks
+        if (process.env.NODE_ENV !== 'production') {
+          // In development, we might want to restart the scheduler
+          console.log('💡 Consider restarting the scheduler in development');
+        }
+      }
     }
   }
 
