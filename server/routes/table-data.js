@@ -12,6 +12,11 @@ const parametersPool = new Pool({
   max: 20,
   idleTimeoutMillis: 30000,
   connectionTimeoutMillis: 2000,
+  // SSL configuration for Render PostgreSQL
+  ssl: {
+    rejectUnauthorized: false,
+    require: true
+  }
 });
 
 // Test connection

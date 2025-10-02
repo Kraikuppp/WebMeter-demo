@@ -9,6 +9,11 @@ const pool = new Pool({
   database: process.env.DB_NAME || 'webmeter_db',
   password: process.env.DB_PASSWORD || 'daWOGvyNuUBHDDRtwv8sLxisuHrwdnoL',
   port: process.env.DB_PORT || 5432,
+  // SSL configuration for Render PostgreSQL
+  ssl: {
+    rejectUnauthorized: false,
+    require: true
+  }
 });
 
 /**

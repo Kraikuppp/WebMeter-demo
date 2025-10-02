@@ -24,9 +24,10 @@ const pool = new Pool({
   connectionTimeoutMillis: 10000, // เพิ่มเวลา connection timeout เป็น 10 วินาที
   acquireTimeoutMillis: 30000, // เพิ่มเวลารอ connection จาก pool
   
-  // SSL configuration for production
-  ssl: process.env.NODE_ENV === 'production' ? {
-    rejectUnauthorized: false // อนุญาตให้ใช้ self-signed certificates
+  // SSL configuration for production (required for Render PostgreSQL)
+  ssl: process.env.NODE_ENV === 'production' || process.env.DB_HOST?.includes('render.com') ? {
+    rejectUnauthorized: false, // อนุญาตให้ใช้ self-signed certificates
+    require: true // บังคับใช้ SSL สำหรับ Render PostgreSQL
   } : false,
   
   // Keep alive settings

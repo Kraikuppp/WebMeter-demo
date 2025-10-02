@@ -21,9 +21,10 @@ const parametersPool = new Pool({
   connectionTimeoutMillis: 15000,
   acquireTimeoutMillis: 30000,
   
-  // SSL for production
-  ssl: process.env.NODE_ENV === 'production' ? {
-    rejectUnauthorized: false
+  // SSL for production (required for Render PostgreSQL)
+  ssl: process.env.NODE_ENV === 'production' || process.env.DB_HOST?.includes('render.com') ? {
+    rejectUnauthorized: false,
+    require: true
   } : false,
   
   // Keep alive
@@ -46,9 +47,10 @@ const mainDb = new Pool({
   connectionTimeoutMillis: 15000,
   acquireTimeoutMillis: 30000,
   
-  // SSL for production
-  ssl: process.env.NODE_ENV === 'production' ? {
-    rejectUnauthorized: false
+  // SSL for production (required for Render PostgreSQL)
+  ssl: process.env.NODE_ENV === 'production' || process.env.DB_HOST?.includes('render.com') ? {
+    rejectUnauthorized: false,
+    require: true
   } : false,
   
   // Keep alive
