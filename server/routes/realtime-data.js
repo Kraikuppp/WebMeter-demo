@@ -4,7 +4,7 @@ const { Pool } = require('pg');
 
 // สร้าง connection pool สำหรับ parameters_db
 const parametersPool = new Pool({
-  host: '192.168.1.175',
+  host: '49.0.87.9',
   port: 5432,
   database: 'parameters_db',
   user: 'postgres',

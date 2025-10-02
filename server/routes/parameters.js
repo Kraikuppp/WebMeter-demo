@@ -6,7 +6,7 @@ require('dotenv').config({ path: path.join(__dirname, '../.env') });
 
 // สร้าง parametersPool สำหรับ parameter database
 const parametersPool = new Pool({
-  host: process.env.DB_HOST || '192.168.1.175',
+  host: process.env.DB_HOST || '49.0.87.9',
   port: process.env.DB_PORT || 5432,
   database: process.env.PARAMETER_DB_NAME || 'parameters_db', // ใช้ parameters database
   user: process.env.PARAMETER_DB_USER || 'postgres',
@@ -20,7 +20,7 @@ const parametersPool = new Pool({
 parametersPool.on('connect', () => {
   console.log('✅ Connected to Parameters PostgreSQL database');
   console.log('🚀 Database config:', {
-    host: process.env.DB_HOST || '192.168.1.175',
+    host: process.env.DB_HOST || '49.0.87.9',
     port: process.env.DB_PORT || 5432,
     database: process.env.PARAMETER_DB_NAME || 'parameters_db',
     user: process.env.PARAMETER_DB_USER || 'postgres'
@@ -46,7 +46,7 @@ router.get('/slave/:slaveId', async (req, res) => {
     console.log(`🚀 Request params:`, req.params);
     console.log(`🚀 Request query:`, req.query);
     console.log(`🚀 Database config:`, {
-      host: process.env.DB_HOST || '192.168.1.175',
+      host: process.env.DB_HOST || '49.0.87.9',
       port: process.env.DB_PORT || 5432,
       database: process.env.PARAMETER_DB_NAME || 'parameters_db',
       user: process.env.PARAMETER_DB_USER || 'postgres'

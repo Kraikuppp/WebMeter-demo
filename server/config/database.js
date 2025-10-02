@@ -11,7 +11,7 @@ console.log('DB_PASSWORD:', process.env.DB_PASSWORD ? '***' : 'undefined');
 
 // สร้าง connection pool สำหรับ PostgreSQL
 const pool = new Pool({
-  host: process.env.DB_HOST || '192.168.1.175',
+  host: process.env.DB_HOST || '49.0.87.9',
   port: process.env.DB_PORT || 5432,
   database: process.env.DB_NAME || 'webmeter_db',
   user: process.env.DB_USER || 'webmeter_app',

@@ -8,7 +8,7 @@ const PDFDocument = require('pdfkit');
 
 // Database connections
 const parametersPool = new Pool({
-  host: '192.168.1.175',
+  host: '49.0.87.9',
   port: 5432,
   database: 'parameters_db',
   user: 'postgres',
@@ -20,7 +20,7 @@ const parametersPool = new Pool({
 
 // Main database connection for users (same as manual export)
 const mainDb = new Pool({
-  host: process.env.DB_HOST || '192.168.1.175',
+  host: process.env.DB_HOST || '49.0.87.9',
   port: process.env.DB_PORT || 5432,
   database: process.env.DB_NAME || 'webmeter_db',
   user: process.env.DB_USER || 'webmeter_app',
