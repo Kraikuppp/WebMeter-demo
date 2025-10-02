@@ -8,7 +8,7 @@ require('dotenv').config({ path: path.join(__dirname, '../.env') });
 const parametersPool = new Pool({
   host: process.env.PARAMETER_DB_HOST || 'dpg-d3f1hphr0fns73d4ts0g-a.singapore-postgres.render.com',
   port: process.env.PARAMETER_DB_PORT || 5432,
-  database: process.env.PARAMETER_DB_NAME || 'parameters_db',
+  database: process.env.PARAMETER_DB_NAME || 'webmeter_db',
   user: process.env.PARAMETER_DB_USER || 'webmeter_db_user',
   password: process.env.PARAMETER_DB_PASSWORD || 'daWOGvyNuUBHDDRtwv8sLxisuHrwdnoL',
   max: 20,
@@ -27,7 +27,7 @@ parametersPool.on('connect', () => {
   console.log('🚀 Database config:', {
     host: process.env.DB_HOST || 'dpg-d3f1hphr0fns73d4ts0g-a.singapore-postgres.render.com',
     port: process.env.DB_PORT || 5432,
-    database: process.env.PARAMETER_DB_NAME || 'parameters_db',
+    database: process.env.PARAMETER_DB_NAME || 'webmeter_db',
     user: process.env.PARAMETER_DB_USER || 'webmeter_db_user'
   });
 });
@@ -53,7 +53,7 @@ router.get('/slave/:slaveId', async (req, res) => {
     console.log(`🚀 Database config:`, {
       host: process.env.DB_HOST || 'dpg-d3f1hphr0fns73d4ts0g-a.singapore-postgres.render.com',
       port: process.env.DB_PORT || 5432,
-      database: process.env.PARAMETER_DB_NAME || 'parameters_db',
+      database: process.env.PARAMETER_DB_NAME || 'webmeter_db',
       user: process.env.PARAMETER_DB_USER || 'webmeter_db_user'
     });
     

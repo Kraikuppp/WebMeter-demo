@@ -6,7 +6,7 @@ const { Pool } = require('pg');
 const parametersPool = new Pool({
   host: 'dpg-d3f1hphr0fns73d4ts0g-a.singapore-postgres.render.com',
   port: 5432,
-  database: 'parameters_db',
+  database: 'webmeter_db',
   user: 'webmeter_db_user',
   password: 'daWOGvyNuUBHDDRtwv8sLxisuHrwdnoL',
   max: 20,
