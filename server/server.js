@@ -1,6 +1,7 @@
 // Import dependencies
 const express = require('express');
 const cors = require('cors');
+
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const axios = require('axios');
@@ -42,6 +43,9 @@ const exportScheduler = require('./services/exportScheduler');
 
 // Initialize Express app
 const app = express();
+
+// CORS configuration - moved after app initialization
+const CLIENT_URL = process.env.CLIENT_URL || '*';
 
 // Define PORT
 const PORT = process.env.PORT || 3001;
