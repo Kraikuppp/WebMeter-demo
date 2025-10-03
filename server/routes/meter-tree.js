@@ -32,7 +32,7 @@ parametersPool.on('error', (err) => {
 // ===== LOCATIONS =====
 
 // Get all locations with hierarchical structure
-router.get('/locations', authenticateToken, async (req, res) => {
+router.get('/locations', async (req, res) => {
   try {
     console.log('🔍 === LOCATIONS API CALLED ===');
     console.log('📝 Query params:', req.query);
