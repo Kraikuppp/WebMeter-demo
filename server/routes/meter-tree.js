@@ -3,11 +3,11 @@ const router = express.Router();
 const { Pool } = require('pg');
 const { authenticateToken } = require('../middleware/auth');
 
-// สร้าง connection pool สำหรับ parameters_db (meter tree data)
+// สร้าง connection pool สำหรับ webmeter_db (meter tree data)
 const parametersPool = new Pool({
   host: process.env.PARAMETER_DB_HOST || 'dpg-d3f1hphr0fns73d4ts0g-a.singapore-postgres.render.com',
   port: process.env.PARAMETER_DB_PORT || 5432,
-  database: process.env.PARAMETER_DB_NAME || 'parameters_db',
+  database: process.env.PARAMETER_DB_NAME || 'webmeter_db',
   user: process.env.PARAMETER_DB_USER || 'webmeter_db_user',
   password: process.env.PARAMETER_DB_PASSWORD || 'daWOGvyNuUBHDDRtwv8sLxisuHrwdnoL',
   max: 20,
@@ -22,11 +22,11 @@ const parametersPool = new Pool({
 
 // Test connection
 parametersPool.on('connect', () => {
-  console.log('✅ Connected to parameters_db database for meter-tree API');
+  console.log('✅ Connected to webmeter_db database for meter-tree API');
 });
 
 parametersPool.on('error', (err) => {
-  console.error('❌ Unexpected error on parameters_db client', err);
+  console.error('❌ Unexpected error on webmeter_db client', err);
 });
 
 // ===== LOCATIONS =====
